@@ -1,0 +1,19 @@
+#!/bin/zsh
+
+monitors_connected=$(xrandr -q | grep -o '\(VGA-[[:digit:]]\+\|HDMI-[[:digit:]]\+\) connected')
+
+if [[ -z ${monitors_connected} ]]; then
+  echo "No external monitors connected"
+  exit
+fi
+
+resolution_pattern='\s\+[[:digit:]]\+x[[:digit:]]\+\s\+[[:digit:]]\+\.[[:digit:]]\(\s\|\*\)+'
+external_monitor_res=$(xrandr -q | grep -zo ${monitors_connected}'.*\(\s.*\)\++' | grep ${resolution_pattern} | cut -d' ' -f4)
+
+resolution_width=${external_monitor_res/x*/}
+resolution_height=${external_monitor_res/*x/}
+
+position_diff=$((resolution_height-768))
+
+xrandr --output VGA-0 --mode ${external_monitor_res} --left-of LVDS --primary
+xrandr --output LVDS --pos ${resolution_width}x${position_diff}

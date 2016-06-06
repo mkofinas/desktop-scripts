@@ -1,0 +1,7 @@
+#!/bin/bash
+
+current_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+keys_dir="$(dirname ${current_dir})/.keys"
+
+(sleep 1;echo -e `cat ${keys_dir}/username`"\r";sleep 1;echo -e `cat ${keys_dir}/password`"\r";sleep 3;echo -e "system reboot\r";sleep 3;) | telnet 192.168.1.254
+
