@@ -1,0 +1,4 @@
+#!/bin/bash
+
+current_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
+echo "export PATH="$PATH:$current_dir/scripts"" > .desktop_scripts
