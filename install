@@ -1,4 +1,7 @@
 #!/bin/bash
 
 current_dir="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
-echo "export PATH="$PATH:$current_dir/scripts"" > .desktop_scripts
+installation_directory="${XDG_CONFIG_HOME:-${HOME}/.config}/desktop_scripts"
+mkdir -p $installation_directory
+echo 'export PATH="$PATH:'"$current_dir/scripts\"" > "${installation_directory}/config"
+
