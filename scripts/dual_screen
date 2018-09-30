@@ -1,5 +1,6 @@
 #!/bin/zsh
 
+left_right_position=$1
 monitors_connected=$(xrandr -q | grep -o '\(VGA-[[:digit:]]\+\|HDMI-[[:digit:]]\+\) connected')
 
 if [[ -z ${monitors_connected} ]]; then
@@ -15,5 +16,10 @@ resolution_height=${external_monitor_res/*x/}
 
 position_diff=$((resolution_height-768))
 
-xrandr --output VGA-0 --mode ${external_monitor_res} --left-of LVDS --primary
-xrandr --output LVDS --pos ${resolution_width}x${position_diff}
+if [[ -z ${left_right_position} || ${left_right_position} = left ]]; then
+  xrandr --output LVDS --pos ${resolution_width}x${position_diff}
+  xrandr --output VGA-0 --mode ${external_monitor_res} --right-of LVDS --primary
+else
+  xrandr --output VGA-0 --mode ${external_monitor_res} --left-of LVDS --primary
+  xrandr --output LVDS --pos ${resolution_width}x${position_diff}
+fi

@@ -1,0 +1,22 @@
+#!/bin/bash
+
+BASE_DIRECTORY=`pwd`/"Bills"
+ORGANIZATIONS=("INTERAMERICAN" "Δ.Ε.Η." "Δ.Ε.Υ.Α. ΧΙΟΥ" "NOVA 2PLAY, 3PLAY / FORTHNET" "Δ.Ο.Υ.")
+ORG_DIRECTORIES=("Interamerican" "ΔΕΗ" "ΔΕΥΑΧ" "Forthnet" "ΕΝΦΙΑ")
+
+for ff in `find ./ -type f -name 'document*pdf'`; do
+  mv -n "$ff" "transaction_$(date -r "${ff}" +%y_%m_%d_%H_%M).pdf";
+done
+
+for idx in "${!ORGANIZATIONS[@]}"; do
+  org="${ORGANIZATIONS[$idx]}"
+  org_dir="${ORG_DIRECTORIES[$idx]}"
+  org_match=`find ./ -name '*.pdf' -exec bash -c 'pdfname="$1"; pdftotext "${pdfname}" - | grep -l --label="${pdfname}" "$2"' _ {} "$org" \;`
+  org_match=(${org_match//$'\n'/ });
+
+  mkdir -p "${BASE_DIRECTORY}/$org_dir"
+  for ff in "${org_match[@]}"; do
+    mv -v "$ff" "${BASE_DIRECTORY}/$org_dir";
+  done
+done
+

@@ -1,5 +1,4 @@
 #!/bin/bash
 
 sudo openvpn --config ${XGD_CONFIG_HOME:-${HOME}/.config}/vpn/client.ovpn
-# sudo route add default gw 192.168.100.1
 ssh -l mkofinas mug7.ee.auth.gr -p 6622
