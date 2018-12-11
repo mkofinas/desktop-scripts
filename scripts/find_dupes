@@ -1,0 +1,128 @@
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+import os
+import sys
+import argparse
+import hashlib
+from collections import Counter
+from collections import defaultdict
+
+import numpy as np
+
+
+def calculate_md5_checksum(file_name, block_size=2**20):
+    with open(file_name, 'rb') as f:
+        m = hashlib.md5()
+        while True:
+            data = f.read(block_size)
+            if not data:
+                break
+            m.update(data)
+        return m.hexdigest()
+
+
+def find_dupes(search_dirs):
+    if isinstance(search_dirs, str):
+        search_dirs = [search_dirs]
+    all_file_names = [os.path.join(dir_path, f)
+                      for search_dir in search_dirs
+                      for dir_path, _, file_names in os.walk(search_dir)
+                      for f in file_names]
+
+    file_sizes = {f: os.stat(f).st_size for f in all_file_names}
+    num_duplicates = Counter(file_sizes.values())
+    dup_file_sizes = defaultdict(list)
+    for k, v in file_sizes.items():
+        dup_file_sizes[v].append(k)
+
+    potential_dupes = [dup_file_sizes[k]
+                       for k, v in num_duplicates.items()
+                       if v > 1]
+    md5_dupes = []
+    for potential_dupe_tuple in potential_dupes:
+        md5_checksums = np.array([calculate_md5_checksum(f)
+                                  for f in potential_dupe_tuple])
+        unique_md5_checksums, inv_md5, md5_counts = np.unique(
+            md5_checksums, return_inverse=True, return_counts=True)
+
+        dupe_md5 = unique_md5_checksums[md5_counts >= 2]
+        for dupe_tuple_md5 in dupe_md5:
+            md5_dupes.append(
+                np.array(potential_dupe_tuple)[
+                    np.where(dupe_tuple_md5 == unique_md5_checksums)[0]
+                    == inv_md5].tolist())
+
+    sorted_dupes = sorted([sorted(d) for d in md5_dupes], key=lambda k: k[0])
+    return sorted_dupes
+
+
+def backup_files(backup_dirs, new_data_dirs):
+    if isinstance(backup_dirs, str):
+        backup_dirs = [backup_dirs]
+    if isinstance(new_data_dirs, str):
+        new_data_dirs = [new_data_dirs]
+
+    print('Search for non-duplicate files...')
+    new_file_names = [os.path.join(dir_path, f)
+                      for new_data_dir in new_data_dirs
+                      for dir_path, _, file_names in os.walk(new_data_dir)
+                      for f in file_names]
+    dupe_tuples = find_dupes(new_data_dirs + backup_dirs)
+    all_dupes = []
+    for d in dupe_tuples:
+        all_dupes.extend(d)
+    all_dupes = set(all_dupes)
+    actual_new_files = list(set(new_file_names) - all_dupes)
+    print('New non-duplicate files:')
+    for f in sorted(actual_new_files):
+        print(f)
+
+
+def print_duplicates(dupe_tuples):
+    for dupe_tuple in dupe_tuples:
+        for it in sorted(dupe_tuple):
+            print(it, end=' ')
+        print()
+
+
+def parse_arguments():
+    """Parse input arguments"""
+    parser = argparse.ArgumentParser(
+        description='Backup files and remove duplicages')
+    parser.add_argument('-b', '--backup', dest='backup_dirs', nargs='+',
+                        help='Backup Directories',
+                        required=True, type=str)
+    parser.add_argument('-n', '--new', dest='new_dirs', nargs='+',
+                        help='New Directories to Backup', type=str)
+
+    args = parser.parse_args()
+    return args
+
+def main(args):
+    preexisting_dupes = False
+    backup_dupe_tuples = find_dupes(args.backup_dirs)
+    if backup_dupe_tuples:
+        print('{0} duplicates in backup directories'.format(len(backup_dupe_tuples)))
+        print('Duplicates pre-exist in backup directories. Clean them up to proceed')
+        preexisting_dupes = True
+    print_duplicates(backup_dupe_tuples)
+
+    if args.new_dirs:
+        new_dupe_tuples = find_dupes(args.new_dirs)
+        if new_dupe_tuples:
+            print('{0} duplicates in new directories'.format(len(new_dupe_tuples)))
+            print('Duplicates pre-exist in new directories. Clean them up to proceed')
+            preexisting_dupes = True
+        print_duplicates(new_dupe_tuples)
+
+    if preexisting_dupes:
+        return
+
+    if args.new_dirs:
+        backup_files(args.backup_dirs, args.new_dirs)
+
+
+if __name__ == "__main__":
+    arguments = parse_arguments()
+    main(arguments)
