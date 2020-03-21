@@ -1,10 +1,10 @@
 #!/bin/bash
 
 BASE_DIRECTORY=`pwd`/"Bills"
-ORGANIZATIONS=("INTERAMERICAN" "Δ.Ε.Η." "Δ.Ε.Υ.Α. ΧΙΟΥ" "NOVA 2PLAY, 3PLAY / FORTHNET" "Δ.Ο.Υ.")
-ORG_DIRECTORIES=("Interamerican" "ΔΕΗ" "ΔΕΥΑΧ" "Forthnet" "ΕΝΦΙΑ")
+ORGANIZATIONS=("INTERAMERICAN" "ΔΕΗ" "Δ.Ε.Η." "Δ.Ε.Υ.Α. ΧΙΟΥ" "NOVA 2PLAY, 3PLAY / FORTHNET" "Δ.Ο.Υ.")
+ORG_DIRECTORIES=("Interamerican" "ΔΕΗ" "ΔΕΗ" "ΔΕΥΑΧ" "Forthnet" "ΕΝΦΙΑ")
 
-for ff in `find ./ -maxdepth 1 -type f -name 'document*pdf'`; do
+for ff in `find ./ -maxdepth 1 -type f \( -name 'document*pdf' -o -name 'print_request*pdf' -o -name 'PrintRequest*pdf' \)`; do
   mv -n -v "$ff" "transaction_$(date -r "${ff}" +%y_%m_%d_%H_%M).pdf";
 done
 
