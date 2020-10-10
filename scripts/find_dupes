@@ -89,7 +89,7 @@ def print_duplicates(dupe_tuples):
 def parse_arguments():
     """Parse input arguments"""
     parser = argparse.ArgumentParser(
-        description='Backup files and remove duplicages')
+        description='Backup files and remove duplicates')
     parser.add_argument('-b', '--backup', dest='backup_dirs', nargs='+',
                         help='Backup Directories',
                         required=True, type=str)
@@ -98,6 +98,7 @@ def parse_arguments():
 
     args = parser.parse_args()
     return args
+
 
 def main(args):
     preexisting_dupes = False
