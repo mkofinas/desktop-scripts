@@ -9,6 +9,8 @@ from collections import Counter
 from collections import defaultdict
 
 import numpy as np
+from rich.console import Console
+from rich.table import Table
 
 
 def calculate_md5_checksum(file_name, block_size=2**20):
@@ -69,6 +71,7 @@ def backup_files(backup_dirs, new_data_dirs):
                       for dir_path, _, file_names in os.walk(new_data_dir)
                       for f in file_names]
     dupe_tuples = find_dupes(new_data_dirs + backup_dirs)
+    print_duplicates(dupe_tuples)
     all_dupes = []
     for d in dupe_tuples:
         all_dupes.extend(d)
@@ -80,10 +83,18 @@ def backup_files(backup_dirs, new_data_dirs):
 
 
 def print_duplicates(dupe_tuples):
-    for dupe_tuple in dupe_tuples:
-        for it in sorted(dupe_tuple):
-            print(it, end=' ')
-        print()
+    console = Console()
+
+    table = Table(show_header=True, header_style="bold magenta")
+    table.add_column("#", justify="left")
+    table.add_column("File #1", justify="left")
+    table.add_column("File #2", justify="left")
+
+    for i, dupe_tuple in enumerate(dupe_tuples):
+        table.add_row(str(i), *sorted(dupe_tuple))
+
+    if table._row_count:
+        console.print(table)
 
 
 def parse_arguments():
@@ -95,6 +106,7 @@ def parse_arguments():
                         required=True, type=str)
     parser.add_argument('-n', '--new', dest='new_dirs', nargs='+',
                         help='New Directories to Backup', type=str)
+    parser.add_argument('-r', '--remove', action='store_true')
 
     args = parser.parse_args()
     return args
@@ -108,6 +120,14 @@ def main(args):
         print('Duplicates pre-exist in backup directories. Clean them up to proceed')
         preexisting_dupes = True
     print_duplicates(backup_dupe_tuples)
+    if args.remove and backup_dupe_tuples:
+        files_to_remove = [f[1] for f in backup_dupe_tuples]
+        for f in files_to_remove:
+            print(f"- {f}")
+        user_response = input('Do you want to remove these files? [Y/n]')
+        if user_response == "Y":
+            for f in files_to_remove:
+                os.remove(f)
 
     if args.new_dirs:
         new_dupe_tuples = find_dupes(args.new_dirs)
